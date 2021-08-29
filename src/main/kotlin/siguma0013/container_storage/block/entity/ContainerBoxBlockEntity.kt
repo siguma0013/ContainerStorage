@@ -6,7 +6,6 @@ import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventories
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.text.Text
@@ -17,14 +16,24 @@ import siguma0013.container_storage.ContainerStorage
 class ContainerBoxBlockEntity(blockPos: BlockPos?, blockState: BlockState?) :
     LootableContainerBlockEntity(ContainerStorage.CONTAINER_BOX_BLOCK_ENTITY, blockPos, blockState)
 {
+    companion object {
+        private const val KEY_FILTER = "filter_id"
+    }
+
+    // インベントリ
     private var inventory = DefaultedList.ofSize(3, ItemStack.EMPTY)
 
-    var filterId: String = ""
-    var filterRawId: Int? = null
+    // フィルター
+    private val filterInitId = Item.getRawId(ItemStack.EMPTY.item)
+    private var filterRawId = filterInitId
 
     // アイテムの格納
     fun addStack(itemStack: ItemStack): Boolean {
-        if (null == filterRawId) filterRawId = Item.getRawId(itemStack.item)
+        // 空の場合のみフィルターIDを設定
+        if (filterInitId == filterRawId) filterRawId = Item.getRawId(itemStack.item)
+
+        // フィルタリング
+        if (!equalItemFilter(itemStack.item)) return false
 
         for (index in 0 until inventory.size) {
             if (ItemStack.EMPTY == inventory[index]) {
@@ -37,7 +46,7 @@ class ContainerBoxBlockEntity(blockPos: BlockPos?, blockState: BlockState?) :
         return false
     }
 
-    //
+    // アイテムの取出
     fun takeStock(): ItemStack? {
         val index = inventory.indexOfFirst { it != ItemStack.EMPTY }
 
@@ -50,12 +59,19 @@ class ContainerBoxBlockEntity(blockPos: BlockPos?, blockState: BlockState?) :
         }
     }
 
+    // フィルター関数
+    private fun equalItemFilter(item: Item): Boolean {
+        val itemFiltered = Item.byRawId(filterRawId)
+
+        return itemFiltered.equals(item)
+    }
+
     override fun readNbt(nbt: NbtCompound?) {
         super.readNbt(nbt)
         inventory = DefaultedList.ofSize(size(), ItemStack.EMPTY)
 
         if (null != nbt) {
-            filterId = nbt.getString("filter_id")
+            filterRawId = nbt.getInt(KEY_FILTER)
         }
 
         Inventories.readNbt(nbt, inventory)
@@ -65,9 +81,7 @@ class ContainerBoxBlockEntity(blockPos: BlockPos?, blockState: BlockState?) :
         super.writeNbt(nbt)
         Inventories.writeNbt(nbt, inventory, false)
 
-        if (null != nbt) {
-            nbt.putString("filter_id", filterId)
-        }
+        nbt?.putInt(KEY_FILTER, filterRawId)
 
         return nbt
     }

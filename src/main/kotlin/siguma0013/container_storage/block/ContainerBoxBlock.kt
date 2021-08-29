@@ -54,12 +54,11 @@ class ContainerBoxBlock(settings: Settings?) : BlockWithEntity(settings) {
 
         val blockEntity = world?.getBlockEntity(pos) as ContainerBoxBlockEntity
         val itemStack = player?.getStackInHand(hand)
-        println(itemStack)
+
         if (false == itemStack?.isEmpty) {
             blockEntity.addStack(itemStack)
             player.setStackInHand(hand, ItemStack.EMPTY)
 
-            blockEntity.filterId = Item.getRawId(itemStack.item).toString()
             blockEntity.markDirty()
         }
 
