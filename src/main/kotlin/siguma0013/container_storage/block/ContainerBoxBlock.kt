@@ -56,11 +56,11 @@ class ContainerBoxBlock(settings: Settings?) : BlockWithEntity(settings) {
         val itemStack = player?.getStackInHand(hand)
 
         if (false == itemStack?.isEmpty) {
-            if (blockEntity.addStack(itemStack)) {
-                player.setStackInHand(hand, ItemStack.EMPTY)
-                blockEntity.markDirty()
-            }
+            if (blockEntity.addStack(itemStack)) blockEntity.markDirty()
         }
+
+        // 0 air(非ItemStack.EMPTY) 対策
+        if (true == itemStack?.isEmpty) player.setStackInHand(hand, ItemStack.EMPTY)
 
         return ActionResult.SUCCESS
     }

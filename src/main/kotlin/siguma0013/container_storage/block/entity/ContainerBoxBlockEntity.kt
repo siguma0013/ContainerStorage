@@ -22,12 +22,26 @@ class ContainerBoxBlockEntity(blockPos: BlockPos?, blockState: BlockState?) :
 
     // インベントリ
     private var inventory = DefaultedList.ofSize(3, ItemStack.EMPTY)
+    private val count: Int
+        get() {
+            var tmpCount = 0
+            for (index in 0 until inventory.size) {
+                if (ItemStack.EMPTY != inventory[index]) {
+                    tmpCount += inventory[index].count
+                }
+            }
+            return tmpCount
+        }
 
     // フィルター
     private val filterInitId = Item.getRawId(ItemStack.EMPTY.item)
     private var filterRawId = filterInitId
 
-    // アイテムの格納
+    /**
+     * アイテムの格納
+     *
+     * @return アイテムを1つ以上格納できた場合 true、それ以外 false
+     */
     fun addStack(itemStack: ItemStack): Boolean {
         // 空の場合のみフィルターIDを設定
         if (filterInitId == filterRawId) filterRawId = Item.getRawId(itemStack.item)
@@ -35,15 +49,22 @@ class ContainerBoxBlockEntity(blockPos: BlockPos?, blockState: BlockState?) :
         // フィルタリング
         if (!equalItemFilter(itemStack.item)) return false
 
-        for (index in 0 until inventory.size) {
-            if (ItemStack.EMPTY == inventory[index]) {
-                inventory[index] = itemStack.copy()
-                itemStack.count = 0
-                return true
-            }
+        // 満タンチェック
+        var tmpCount = count
+        val maxCount = itemStack.maxCount * size()
+        if (maxCount == tmpCount) return false
+
+        tmpCount += itemStack.count
+        if (maxCount < tmpCount) {
+            itemStack.count = tmpCount - maxCount
+            tmpCount = maxCount
+        } else {
+            itemStack.count = 0
         }
 
-        return false
+        refillInventory(tmpCount, itemStack.maxCount)
+
+        return true
     }
 
     // アイテムの取出
@@ -64,6 +85,26 @@ class ContainerBoxBlockEntity(blockPos: BlockPos?, blockState: BlockState?) :
         val itemFiltered = Item.byRawId(filterRawId)
 
         return itemFiltered.equals(item)
+    }
+
+    // インベントリの詰め直し関数
+    private fun refillInventory(count: Int, itemMaxCount: Int) {
+        val countStack = count / itemMaxCount
+        val countModulo = count % itemMaxCount
+        val tmpInventory = DefaultedList.ofSize(size(), ItemStack.EMPTY)
+        val itemFiltered = Item.byRawId(filterRawId)
+
+        // フルスタックアイテムの格納
+        for (index in 0 until countStack) {
+            tmpInventory[index] = ItemStack(itemFiltered, itemMaxCount)
+        }
+
+        // 非フルスタックアイテムの格納
+        if (size() > countStack) {
+            tmpInventory[countStack] = ItemStack(itemFiltered, countModulo)
+        }
+
+        inventory = tmpInventory
     }
 
     override fun readNbt(nbt: NbtCompound?) {
