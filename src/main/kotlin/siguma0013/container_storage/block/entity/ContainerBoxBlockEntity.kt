@@ -22,7 +22,7 @@ class ContainerBoxBlockEntity(blockPos: BlockPos?, blockState: BlockState?) :
 
     // インベントリ
     private var inventory = DefaultedList.ofSize(3, ItemStack.EMPTY)
-    private val count: Int
+    val count: Int
         get() {
             var tmpCount = 0
             for (index in 0 until inventory.size) {
@@ -36,6 +36,7 @@ class ContainerBoxBlockEntity(blockPos: BlockPos?, blockState: BlockState?) :
     // フィルター
     private val filterInitId = Item.getRawId(ItemStack.EMPTY.item)
     private var filterRawId = filterInitId
+    val itemFiltered: Item get() = Item.byRawId(filterRawId)
 
     /**
      * アイテムの格納
@@ -68,20 +69,18 @@ class ContainerBoxBlockEntity(blockPos: BlockPos?, blockState: BlockState?) :
     }
 
     // アイテムの取出
-    fun takeStock(): ItemStack? {
-        val index = inventory.indexOfFirst { it != ItemStack.EMPTY }
+    fun takeStock(reqCount: Int): ItemStack {
+        val invCount = count
 
-        return if (0 <= index) {
-            val itemStack = inventory[index].copy()
-            inventory[index] = ItemStack.EMPTY
-            itemStack
-        } else {
-            null
-        }
+        val takeCount = if (reqCount < invCount) reqCount else invCount
+
+        refillInventory(invCount - takeCount, Item.byRawId(filterRawId).maxCount)
+
+        return ItemStack(Item.byRawId(filterRawId), takeCount)
     }
 
     // フィルター関数
-    private fun equalItemFilter(item: Item): Boolean {
+    fun equalItemFilter(item: Item): Boolean {
         val itemFiltered = Item.byRawId(filterRawId)
 
         return itemFiltered.equals(item)
