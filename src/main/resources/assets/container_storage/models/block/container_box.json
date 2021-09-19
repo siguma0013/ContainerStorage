@@ -1,0 +1,7 @@
+{
+  "parent": "container_storage:block/base",
+  "textures": {
+    "front": "container_storage:block/container_box_front",
+    "common": "container_storage:block/container_box_common"
+  }
+}

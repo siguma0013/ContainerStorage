@@ -1,0 +1,11 @@
+{
+  "parent": "block/cube",
+  "textures": {
+    "down": "#common",
+    "up": "#common",
+    "north": "#front",
+    "east": "#common",
+    "south": "#common",
+    "west": "#common"
+  }
+}
