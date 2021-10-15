@@ -69,6 +69,42 @@ class ContainerBoxBlockEntityRenderer : BlockEntityRenderer<ContainerBoxBlockEnt
         )
 
         matrices.pop()
+
+
+        matrices.push()
+
+        // 向き調整
+        when (entity?.cachedState?.get(Properties.FACING)) {
+            NORTH -> {
+                matrices.translate(0.5, 0.25, -0.001)
+                matrices.multiply(Quaternion(Vec3f.POSITIVE_Y, 180F, true))
+            }
+            SOUTH -> {
+                matrices.translate(0.5, 0.25, 1.001)
+            }
+            WEST -> {
+                matrices.translate(-0.001, 0.25, 0.5)
+                matrices.multiply(Quaternion(Vec3f.POSITIVE_Y, 270F, true))
+            }
+            EAST -> {
+                matrices.translate(1.001, 0.25, 0.5)
+                matrices.multiply(Quaternion(Vec3f.POSITIVE_Y, 90F, true))
+            }
+            else -> {}
+        }
+
+        matrices.multiply(Quaternion(Vec3f.POSITIVE_X, 180F, true))
+
+        // サイズ調整
+        matrices.scale(0.01f, 0.01f,1f)
+
+        val count = entity?.count.toString()
+        val width = MinecraftClient.getInstance().textRenderer.getWidth(count)
+        val x_p = (width / 2).toFloat()
+
+        MinecraftClient.getInstance().textRenderer.draw(matrices, count, -x_p, 0F, 0)
+
+        matrices.pop()
     }
 
 }
