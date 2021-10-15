@@ -136,6 +136,11 @@ class ContainerBoxBlockEntity(blockPos: BlockPos?, blockState: BlockState?) :
         return writeNbt(tag)
     }
 
+    override fun markDirty() {
+        super.markDirty()
+        this.sync()
+    }
+
     override fun size(): Int = inventory.size
 
     override fun getContainerName(): Text {
