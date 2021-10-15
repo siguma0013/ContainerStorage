@@ -1,5 +1,8 @@
 {
   "variants": {
-    "": { "model": "container_storage:block/container_box" }
+    "facing=north": { "model": "container_storage:block/container_box" },
+    "facing=east": { "model": "container_storage:block/container_box", "y": 90 },
+    "facing=south": { "model": "container_storage:block/container_box", "y": 180 },
+    "facing=west": { "model": "container_storage:block/container_box", "y": 270 }
   }
 }

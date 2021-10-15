@@ -1,24 +1,41 @@
 package siguma0013.container_storage.block
 
-import net.minecraft.block.BlockRenderType
-import net.minecraft.block.BlockState
-import net.minecraft.block.BlockWithEntity
+import net.minecraft.block.*
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.item.ItemPlacementContext
 import net.minecraft.item.ItemStack
+import net.minecraft.state.StateManager
+import net.minecraft.state.property.DirectionProperty
+import net.minecraft.state.property.Properties
 import net.minecraft.util.ActionResult
+import net.minecraft.util.BlockMirror
+import net.minecraft.util.BlockRotation
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Direction
 import net.minecraft.world.World
 import siguma0013.container_storage.block.entity.ContainerBoxBlockEntity
 
 class ContainerBoxBlock(settings: Settings?) : BlockWithEntity(settings) {
+    companion object {
+        val facing: DirectionProperty = Properties.FACING
+    }
+
+    init {
+        defaultState = getStateManager().defaultState.with(facing, Direction.NORTH)
+    }
+
     override fun createBlockEntity(pos: BlockPos?, state: BlockState?): BlockEntity {
         return ContainerBoxBlockEntity(pos, state)
     }
 
     override fun getRenderType(state: BlockState?): BlockRenderType = BlockRenderType.MODEL
+
+    override fun appendProperties(builder: StateManager.Builder<Block, BlockState>?) {
+            builder?.add(facing)
+    }
 
     // 左クリック
     override fun onBlockBreakStart(state: BlockState?, world: World?, pos: BlockPos?, player: PlayerEntity?) {
@@ -75,5 +92,17 @@ class ContainerBoxBlock(settings: Settings?) : BlockWithEntity(settings) {
         if (true == itemStack?.isEmpty) player.setStackInHand(hand, ItemStack.EMPTY)
 
         return ActionResult.SUCCESS
+    }
+
+    override fun getPlacementState(ctx: ItemPlacementContext?): BlockState? {
+        return defaultState.with(facing, ctx?.playerFacing?.opposite)
+    }
+
+    override fun rotate(state: BlockState?, rotation: BlockRotation?): BlockState? {
+        return state?.with(facing, rotation?.rotate(state.get(facing)))
+    }
+
+    override fun mirror(state: BlockState?, mirror: BlockMirror?): BlockState? {
+        return state?.rotate(mirror?.getRotation(state.get(facing)))
     }
 }
