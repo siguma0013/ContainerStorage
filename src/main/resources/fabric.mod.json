@@ -18,6 +18,9 @@
         "adapter": "kotlin",
         "value": "siguma0013.container_storage.ContainerStorage"
       }
+    ],
+    "client": [
+      "siguma0013.container_storage.ContainerStorageClient"
     ]
   },
   "mixins": [
