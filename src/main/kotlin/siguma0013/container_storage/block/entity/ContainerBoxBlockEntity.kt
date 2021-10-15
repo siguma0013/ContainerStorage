@@ -1,5 +1,6 @@
 package siguma0013.container_storage.block.entity
 
+import net.fabricmc.fabric.api.block.entity.BlockEntityClientSerializable
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.LootableContainerBlockEntity
 import net.minecraft.entity.player.PlayerInventory
@@ -14,7 +15,8 @@ import net.minecraft.util.math.BlockPos
 import siguma0013.container_storage.ContainerStorage
 
 class ContainerBoxBlockEntity(blockPos: BlockPos?, blockState: BlockState?) :
-    LootableContainerBlockEntity(ContainerStorage.CONTAINER_BOX_BLOCK_ENTITY, blockPos, blockState)
+    LootableContainerBlockEntity(ContainerStorage.CONTAINER_BOX_BLOCK_ENTITY, blockPos, blockState),
+    BlockEntityClientSerializable
 {
     companion object {
         private const val KEY_FILTER = "filter_id"
@@ -124,6 +126,14 @@ class ContainerBoxBlockEntity(blockPos: BlockPos?, blockState: BlockState?) :
         nbt?.putInt(KEY_FILTER, filterRawId)
 
         return nbt
+    }
+
+    override fun fromClientTag(tag: NbtCompound?) {
+        readNbt(tag)
+    }
+
+    override fun toClientTag(tag: NbtCompound?): NbtCompound? {
+        return writeNbt(tag)
     }
 
     override fun size(): Int = inventory.size
