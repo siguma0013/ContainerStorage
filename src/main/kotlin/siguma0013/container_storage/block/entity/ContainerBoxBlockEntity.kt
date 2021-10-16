@@ -2,20 +2,20 @@ package siguma0013.container_storage.block.entity
 
 import net.fabricmc.fabric.api.block.entity.BlockEntityClientSerializable
 import net.minecraft.block.BlockState
-import net.minecraft.block.entity.LootableContainerBlockEntity
-import net.minecraft.entity.player.PlayerInventory
+import net.minecraft.block.entity.BlockEntity
+import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.inventory.Inventories
+import net.minecraft.inventory.Inventory
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.text.Text
 import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import siguma0013.container_storage.ContainerStorage
 
 class ContainerBoxBlockEntity(blockPos: BlockPos?, blockState: BlockState?) :
-    LootableContainerBlockEntity(ContainerStorage.CONTAINER_BOX_BLOCK_ENTITY, blockPos, blockState),
+    BlockEntity(ContainerStorage.CONTAINER_BOX_BLOCK_ENTITY, blockPos, blockState),
+    Inventory,
     BlockEntityClientSerializable
 {
     companion object {
@@ -121,6 +121,7 @@ class ContainerBoxBlockEntity(blockPos: BlockPos?, blockState: BlockState?) :
 
     override fun writeNbt(nbt: NbtCompound?): NbtCompound? {
         super.writeNbt(nbt)
+
         Inventories.writeNbt(nbt, inventory, false)
 
         nbt?.putInt(KEY_FILTER, filterRawId)
@@ -143,17 +144,36 @@ class ContainerBoxBlockEntity(blockPos: BlockPos?, blockState: BlockState?) :
 
     override fun size(): Int = inventory.size
 
-    override fun getContainerName(): Text {
-        TODO("Not yet implemented")
+    override fun canPlayerUse(player: PlayerEntity?): Boolean = true
+
+    override fun clear() {
+        inventory.clear()
     }
 
-    override fun createScreenHandler(syncId: Int, playerInventory: PlayerInventory?): ScreenHandler {
-        TODO("Not yet implemented")
+    override fun isEmpty(): Boolean = count == 0
+
+    override fun getStack(slot: Int): ItemStack = inventory[slot]
+
+    override fun removeStack(slot: Int, amount: Int): ItemStack {
+        val itemStack = Inventories.splitStack(inventory, slot, amount)
+
+        if (!itemStack.isEmpty) {
+            this.markDirty()
+        }
+
+        return itemStack
     }
 
-    override fun getInvStackList(): DefaultedList<ItemStack> = inventory
+    override fun removeStack(slot: Int): ItemStack {
+        return Inventories.removeStack(inventory, slot)
+    }
 
-    override fun setInvStackList(list: DefaultedList<ItemStack>?) {
-        inventory = list
+    override fun setStack(slot: Int, stack: ItemStack?) {
+        inventory[slot] = stack
+        if (stack!!.count > this.maxCountPerStack) {
+            stack.count = this.maxCountPerStack
+        }
+
+        this.markDirty()
     }
 }

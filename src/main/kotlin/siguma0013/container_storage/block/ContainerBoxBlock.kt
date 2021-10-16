@@ -5,18 +5,19 @@ import net.minecraft.block.entity.BlockEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.item.ItemStack
+import net.minecraft.loot.context.LootContext
+import net.minecraft.loot.context.LootContext.Dropper
+import net.minecraft.loot.context.LootContextParameters
 import net.minecraft.state.StateManager
 import net.minecraft.state.property.DirectionProperty
 import net.minecraft.state.property.Properties
-import net.minecraft.util.ActionResult
-import net.minecraft.util.BlockMirror
-import net.minecraft.util.BlockRotation
-import net.minecraft.util.Hand
+import net.minecraft.util.*
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.world.World
 import siguma0013.container_storage.block.entity.ContainerBoxBlockEntity
+import java.util.function.Consumer
 
 class ContainerBoxBlock(settings: Settings?) : BlockWithEntity(settings) {
     companion object {
@@ -104,5 +105,23 @@ class ContainerBoxBlock(settings: Settings?) : BlockWithEntity(settings) {
 
     override fun mirror(state: BlockState?, mirror: BlockMirror?): BlockState? {
         return state?.rotate(mirror?.getRotation(state.get(facing)))
+    }
+
+    override fun getDroppedStacks(state: BlockState?, builder: LootContext.Builder?): MutableList<ItemStack> {
+        val blockEntity = builder?.getNullable(LootContextParameters.BLOCK_ENTITY)
+        var rebuilder: LootContext.Builder? = null
+
+        if (blockEntity is ContainerBoxBlockEntity) {
+            val entity = blockEntity as ContainerBoxBlockEntity
+            rebuilder = builder.putDrop(
+                Identifier("contents")
+            ) { lootContext: LootContext?, consumer: Consumer<ItemStack?> ->
+                for (i in 0 until entity.size()) {
+                    consumer.accept(entity.getStack(i))
+                }
+            }
+        }
+
+        return super.getDroppedStacks(state, rebuilder)
     }
 }
